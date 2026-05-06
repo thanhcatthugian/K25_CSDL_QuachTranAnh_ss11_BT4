@@ -30,20 +30,25 @@ create procedure GetPatientDebt (
 begin
 	declare d_id int;
 	declare d_phone varchar(15);
+    
     select id into d_id from victims
     where id = p_id;
+    
     select phone into d_phone from victims
-    where id = p_id;
+    where p_phone = phone;
     
     if 
     p_id is null and p_phone is null then
     set p_ann = 'Lỗi: Chưa nhập dữ liệu';
-    elseif p_id != d_id or p_phone != d_phone then
+    
+    elseif p_id != d_id and p_phone != d_phone then
     set p_ann = 'Lỗi: Không tìm thấy';
+    
     elseif p_id = d_id or p_phone = d_phone then
     select * from victims
     where id = p_id or phone = d_phone;
     set p_ann = 'Đã tìm thấy';
+    
     elseif p_id = d_id and p_phone = d_phone then
     select * from victims
     where id = p_id and phone = d_phone;
@@ -54,7 +59,18 @@ end
 set @ann = '';
 call GetPatientDebt(null,null,@ann);
 select @ann;
-call GetPatientDebt(1,'0990001111',@ann);
+call GetPatientDebt(1,null,@ann);
 select @ann;
 call GetPatientDebt(1,'0901112222',@ann);
 select @ann;
+call GetPatientDebt(null,'0990001111',@ann);
+select @ann;
+
+/*
+Sử dụng 2 in, 1 out để in thông báo
+Để tìm id hoặc phone có thể so sánh dữ liệu được đưa vào với dữu liệu bảng gốc thông qua biến ảo
+rồi sử dụng if-else để phân các trường hợp
+-> Code ngắn gọn hơn, ít bị lặp hơn (Chọn cách này)
+So sánh trực tiếp với bảng gốc
+-> Dễ hiểu hơn nhưng bị lặp nhiều lần select
+*/
